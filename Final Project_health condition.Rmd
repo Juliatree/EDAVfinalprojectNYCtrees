@@ -1,0 +1,83 @@
+---
+title: "Homework #4 Final Project"
+author: "Junnan Zhao (UNI: jz3031)"
+date: "November 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Question 3**
+Begin the analysis of one variable in the dataset you are using the final project.  As this is an individual homework assignment, each group member should choose a different variable. Choose three visualizations as appropriate to show the distribution of the variable, conditioned on another variable if desired (for example, the distribution of income by region).  Write a few sentences describing what you found and what new questions your visualizations have generated. (Faceted graphs count as one graph; graphs put together with grid.arrange() or similar count as multiple graphs.)
+
+**ANSWER**
+Data Sourse: https://data.cityofnewyork.us/Environment/2015-Street-Tree-Census-Tree-Data/uvpi-gqnh 
+
+Our final project is about NYC street trees. There are 683788 tree observations of 45 variables. I choose `health` as the dependent variable to analysis. As figure1 shows, most trees are in good condition. The trees without any health condition data are dead (NAs). The dead and poor amount of trees are about the same. Figure2 indicates the tree health condition does not affected by the data collection type, either NYC park staff, trees count staff, or volunteers. Figure3 shows that when the number of steward increases, the percentage of good condition trees increase slightly as well. The trees need more stewards may be more difficult to be alive, so the positive impact of steward more be larger than what figure3 demonstrates.  
+
+```{r}
+library(tidyverse)
+library(ggthemes)
+library(dplyr)
+library(scales)
+
+Tree <- read.csv("NYCtree2015.csv")
+View(Tree)
+Tree[Tree == ''] <- NA
+Tree$health <- factor(Tree$health, ordered = TRUE, levels <- c("Poor", "Fair", "Good"))
+summary(Tree$health)
+g_health <- ggplot(Tree, aes(x = factor(health)), width=0.5) +
+              geom_bar() +
+              ggtitle("Figure1: NYC Street Trees Health Condition") + 
+              theme_get() 
+g_health
+```
+
+As figure 1 shows, the trees in good condition is about 81.1% of all the alive trees, fair condition trees is about 14.8% and poor condition is about 4.1%. The trees without any health condition data are dead (NAs). The dead and poor condition trees are about the same amount. Figure 2 indicates the tree's health condition is not definitely related by th type of data collectors. Although the trees count staff do collect more good condition trees, it maybe because that trees count staff are assign more good condition trees to count. Figure 3 shows that Queens and Brooklyn have significantly more percentage trees in good conditions than the other three boroughs. Figure 4 shows that when the number of steward increases, the percentage of good condition trees increase slightly as well. The trees need more stewards may be more difficult to be alive, so the positive impact of steward may be larger than what figure 4 demonstrates.  
+
+```{R}
+summary(Tree$user_type)
+
+healthcolors <- c("gray", "lightgreen", "darkgreen")
+ggplot(Tree, aes(x = user_type, fill = health)) + 
+  geom_bar(position = "dodge") + 
+  scale_fill_manual(values = healthcolors, na.value = "black") + 
+  ggtitle("Figure2: Group bar chart by data collector") + theme_gray()
+```
+
+```{R}
+summary(Tree$borough)
+
+healthcolors <- c("gray", "lightgreen", "darkgreen")
+ggplot(Tree, aes(x = borough, fill = health)) + 
+  geom_bar(position = "dodge") + 
+  scale_fill_manual(values = healthcolors, na.value = "black") + 
+  ggtitle("Figure3: Group bar chart by borough") + theme_gray()
+
+ggplot(Tree, aes(x = borough, fill = health)) + 
+    geom_bar()+ scale_fill_manual(values = healthcolors, na.value = "black") +
+    ggtitle("Figure3: Group bar chart by borough") + theme_gray()
+
+```
+
+
+```{R}
+summary(Tree$steward)
+Tree$steward <- factor(Tree$steward, ordered = TRUE, levels <- c("None", "1or2", "3or4", "4orMore"))
+
+healthcolors <- c("gray", "lightgreen", "darkgreen")
+ggplot(Tree, aes(x = steward, fill = health)) + 
+  geom_bar(position = "dodge") + 
+  scale_fill_manual(values = healthcolors, na.value = "black") + 
+  ggtitle("Figure3: Group bar chart by steward") + theme_gray()
+
+library(grid)
+vcd::mosaic(health~steward, Tree, 
+            direction = c("v", "h"), # <- order: steward ("v"), health ("h")
+            gp = gpar(fill = healthcolors),
+            rot_labels=c(90,0,0,90), offset_labels=c(0.85,0,0,0),
+            labeling_args=list(gp_labels=gpar(fontsize=8)))
+```
+
